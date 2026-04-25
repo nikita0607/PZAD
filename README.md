@@ -1,87 +1,60 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/kOqwghv0)
-# ML Project — [Название проекта]
+﻿# Physics-Informed Neural Networks for 2D Heat Equation
 
-**Студент:** [ФИО / Student ID]
+Студенты:
+Янке Анастасия (tg: @username) — математическая постановка, архитектура PINN, реализация функции потерь (PDE loss).
+Пырлицану Никита (tg: @username) — реализация численного метода (FDM) для ground truth, генерация синтетических данных, визуализация, структура репозитория.
 
-**Группа:** [Группа]
+## Project Goal
+Исследование PINN для моделирования температурного поля в 2D-пластине и сравнение с:
+- классическим численным решением (FDM, ground truth),
+- обычным MLP без физического ограничения.
 
-
-## Оглавление
-
-1. [Описание задачи](#описание-задачи)
-2. [Структура репозитория](#структура-репозитория)
-3. [Запуски](#быстрый-старт)
-4. [Данные](#данные)
-5. [Результаты](#результаты)
-7. [Отчёт](#отчёт)
-
-
-## Описание задачи
-
-<!-- Кратко опишите задачу: что предсказываем, какой датасет, метрика качества -->
-
-**Задача:** [Классификация / Регрессия / Кластеризация / ...]
-
-**Датасет:** [Название и источник датасета]
-
-**Целевая метрика:** [Accuracy / F1 / RMSE / ...]
-
-
-## Структура репозитория
-Опишите структуру проекта, сохранив при этом верхнеуровневые папки. Можно добавить новые при необходимости.
-```
+## Repository Structure
+```text
 .
 ├── data
-│   ├── processed               # Очищенные и обработанные данные
-│   └── raw                     # Исходные файлы
-├── models                      # Сохранённые модели 
+│   ├── processed                 # Сгенерированные сетки и результаты FDM (ground truth)
+│   └── raw                       # Параметры физической среды
+├── models                        # Сохранённые веса обученных моделей
 ├── notebooks
-│   ├── 01_eda.ipynb            # EDA
-│   ├── 02_baseline.ipynb       # Baseline-модель
-│   └── 03_experiments.ipynb    # Эксперименты и ablation study
-├── presentation                # Презентация для защиты
+│   ├── 01_eda_and_fdm.ipynb      # Генерация сетки и эталонного FDM
+│   ├── 02_baseline_mlp.ipynb     # Baseline: MLP без PDE-loss
+│   └── 03_experiments_pinn.ipynb # PINN и ablation study
+├── presentation
 ├── report
-│   ├── images                  # Изображения для отчёта
-│   └── report.md               # Финальный отчёт
+│   ├── pic
+│   ├── main.tex
+│   └── report.md
 ├── src
-│   ├── preprocessing.py        # Предобработка данных
-│   └── modeling.py             # Обучение и оценка моделей
-├── tests
-│   └── test.py                 # Тесты пайплайна
+│   ├── preprocessing.py          # Domain sampling, нормализация, FDM dataset
+│   ├── modeling.py               # MLP/PINN, функции потерь, train loop
+│   └── utils.py                  # Визуализация тепловых карт и лоссов
 ├── requirements.txt
 └── README.md
 ```
 
-## Запуск
-
-Этот блок замените способом запуска вашего сервиса.
+## Quick Start
 ```bash
-# 1. Клонировать репозиторий
-git clone <url>
-cd <repo-name>
-
-# 2. Создать виртуальное окружение
 python -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-# .venv\Scripts\activate    # Windows
-
-# 3. Установить зависимости
+# Windows:
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Данные
-- `data/raw/` — исходные файлы
-- `data/processed/` — предобработанные данные
+## Data Pipeline
+1. Domain sampling (collocation, BC, IC): `src/preprocessing.py`
+2. Normalization to `[0, 1]` for coordinates and temperature
+3. FDM solver produces ground truth field in `data/processed/pinn_dataset.npz`
 
+Run data generation:
+```bash
+python -m src.preprocessing
+```
 
-## Результаты
-Здесь коротко выпишите результаты.
-| Модель | [Метрика 1] | [Метрика 2] | Примечание |
-|--------|-------------|-------------|------------|
-| Baseline | — | — | |
-| Лучшая модель | — | — | |
+## Experiments
+1. `notebooks/01_eda_and_fdm.ipynb` — генерация и проверка датасета
+2. `notebooks/02_baseline_mlp.ipynb` — supervised MLP baseline
+3. `notebooks/03_experiments_pinn.ipynb` — PINN + ablation (loss weights / depth)
 
-
-## Отчёт
-
-Финальный отчёт: [`report/report.md`](report/report.md)
+## Report
+Основной отчёт: `report/main.tex`

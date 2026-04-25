@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hseml-pinn-project"
+version = "0.1.0"
+description = "PINN and baseline MLP for 2D heat equation experiments"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["src"]

@@ -162,7 +162,10 @@ with col1:
     st.subheader("Точечный инференс")
     x_val = st.number_input("x", min_value=float(mins_maxs["x"][0]), max_value=float(mins_maxs["x"][1]), value=0.5)
     y_val = st.number_input("y", min_value=float(mins_maxs["y"][0]), max_value=float(mins_maxs["y"][1]), value=0.5)
-    t_val = st.number_input("t", min_value=float(mins_maxs["t"][0]), max_value=float(mins_maxs["t"][1]), value=0.5)
+    if model_name == "MLP":
+        t_val = 1
+    else:
+        t_val = st.number_input("t", min_value=float(mins_maxs["t"][0]), max_value=float(mins_maxs["t"][1]), value=0.5)
 
     if st.button("Предсказать температуру"):
         temp_pred = predict_single(model, x_val, y_val, t_val, mins_maxs=mins_maxs)
@@ -170,12 +173,15 @@ with col1:
 
 with col2:
     st.subheader("Карта температуры")
-    t_map = st.slider(
-        "Время t для карты",
-        min_value=float(mins_maxs["t"][0]),
-        max_value=float(mins_maxs["t"][1]),
-        value=float(mins_maxs["t"][0]),
-    )
+    if model_name == "MLP":
+        t_map = 1.0
+    else:
+        t_map = st.slider(
+            "Время t для карты",
+            min_value=float(mins_maxs["t"][0]),
+            max_value=float(mins_maxs["t"][1]),
+            value=float(mins_maxs["t"][0]),
+        )
     grid_size = st.slider("Размер сетки", min_value=20, max_value=150, value=60, step=10)
     if st.button("Построить карту"):
         xx, yy, pred_temp = predict_grid(model, t_phys=t_map, mins_maxs=mins_maxs, n_points=grid_size)
@@ -186,3 +192,53 @@ with col2:
         ax.set_ylabel("y")
         ax.set_title(f"Predicted Temperature Field (t={t_map:.3f})")
         st.pyplot(fig)
+
+if model_name != "MLP":
+    st.subheader("Разность температур: t2 - t1")
+    diff_col1, diff_col2 = st.columns(2)
+    with diff_col1:
+        t1 = st.slider(
+            "t1",
+            min_value=float(mins_maxs["t"][0]),
+            max_value=float(mins_maxs["t"][1]),
+            value=float(mins_maxs["t"][0]),
+            key="t1_slider",
+        )
+    with diff_col2:
+        t2 = st.slider(
+            "t2",
+            min_value=float(mins_maxs["t"][0]),
+            max_value=float(mins_maxs["t"][1]),
+            value=float(mins_maxs["t"][1]),
+            key="t2_slider",
+        )
+
+    if st.button("Показать разность t2 - t1", type="secondary"):
+        xx, yy, pred_t1 = predict_grid(model, t_phys=t1, mins_maxs=mins_maxs, n_points=grid_size)
+        _, _, pred_t2 = predict_grid(model, t_phys=t2, mins_maxs=mins_maxs, n_points=grid_size)
+        diff = pred_t2 - pred_t1
+
+        st.metric("max|ΔT|", f"{np.max(np.abs(diff)):.6f}")
+
+        fig_diff, axes = plt.subplots(1, 3, figsize=(16, 4.8), constrained_layout=True)
+        c0 = axes[0].contourf(xx, yy, pred_t1, levels=25, cmap="inferno")
+        axes[0].set_title(f"T(t1={t1:.3f})")
+        axes[0].set_xlabel("x")
+        axes[0].set_ylabel("y")
+        fig_diff.colorbar(c0, ax=axes[0], label="Temperature")
+
+        c1 = axes[1].contourf(xx, yy, pred_t2, levels=25, cmap="inferno")
+        axes[1].set_title(f"T(t2={t2:.3f})")
+        axes[1].set_xlabel("x")
+        axes[1].set_ylabel("y")
+        fig_diff.colorbar(c1, ax=axes[1], label="Temperature")
+
+        max_abs = float(np.max(np.abs(diff)))
+        if max_abs < 1e-12:
+            max_abs = 1e-12
+        c2 = axes[2].contourf(xx, yy, diff, levels=25, cmap="coolwarm", vmin=-max_abs, vmax=max_abs)
+        axes[2].set_title("ΔT = T(t2) - T(t1)")
+        axes[2].set_xlabel("x")
+        axes[2].set_ylabel("y")
+        fig_diff.colorbar(c2, ax=axes[2], label="ΔTemperature")
+        st.pyplot(fig_diff)

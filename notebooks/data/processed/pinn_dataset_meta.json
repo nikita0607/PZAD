@@ -1,0 +1,29 @@
+{
+  "normalization": {
+    "x": [
+      0.0,
+      1.0
+    ],
+    "y": [
+      0.0,
+      1.0
+    ],
+    "t": [
+      0.0,
+      1.0
+    ],
+    "temperature": [
+      20.0,
+      60.0
+    ]
+  },
+  "counts": {
+    "collocation": 25000,
+    "initial": 2000,
+    "boundary_per_side": 2000
+  },
+  "fdm_grid": {
+    "nx": 51,
+    "ny": 51
+  }
+}

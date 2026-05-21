@@ -8,7 +8,10 @@ import json
 from typing import Dict
 
 import numpy as np
-from scipy.stats.qmc import LatinHypercube
+try:
+    from scipy.stats.qmc import LatinHypercube
+except Exception:  # pragma: no cover - fallback for broken scipy runtime
+    LatinHypercube = None
 
 
 @dataclass
@@ -41,8 +44,13 @@ def sample_domain_points(
     seed: int = 42,
 ) -> np.ndarray:
     """Latin Hypercube sampling for interior collocation points."""
-    sampler = LatinHypercube(d=3, seed=seed)
-    pts = sampler.random(n_points)
+    if LatinHypercube is not None:
+        sampler = LatinHypercube(d=3, seed=seed)
+        pts = sampler.random(n_points)
+    else:
+        # Fallback when scipy.qmc is unavailable in the active environment.
+        rng = np.random.default_rng(seed)
+        pts = rng.random((n_points, 3))
     x = cfg.x_min + (cfg.x_max - cfg.x_min) * pts[:, 0]
     y = cfg.y_min + (cfg.y_max - cfg.y_min) * pts[:, 1]
     t = cfg.t_min + (cfg.t_max - cfg.t_min) * pts[:, 2]
@@ -55,8 +63,13 @@ def sample_initial_points(
     seed: int = 42,
 ) -> np.ndarray:
     """Sample initial condition points (t = t_min)."""
-    sampler = LatinHypercube(d=2, seed=seed)
-    pts = sampler.random(n_points)
+    if LatinHypercube is not None:
+        sampler = LatinHypercube(d=2, seed=seed)
+        pts = sampler.random(n_points)
+    else:
+        # Fallback when scipy.qmc is unavailable in the active environment.
+        rng = np.random.default_rng(seed)
+        pts = rng.random((n_points, 2))
     x = cfg.x_min + (cfg.x_max - cfg.x_min) * pts[:, 0]
     y = cfg.y_min + (cfg.y_max - cfg.y_min) * pts[:, 1]
     t = np.full_like(x, cfg.t_min)
